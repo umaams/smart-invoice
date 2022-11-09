@@ -2,11 +2,11 @@
 !.gitignore
 
 # Core
-!core
-!core/**/*
+#!core
+#!core/**/*
 
 # Base themes
-!invoiceplane
-!invoiceplane/**/*
-!invoiceplane_blue
-!invoiceplane_blue/**/*
+#!invoiceplane
+#!invoiceplane/**/*
+#!invoiceplane_blue
+#!invoiceplane_blue/**/*

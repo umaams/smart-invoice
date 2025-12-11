@@ -18,7 +18,7 @@ WORKDIR /app
 # Copy composer files (optional, jika CI3 pakai composer)
 COPY composer.json composer.lock ./
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction || true \
+RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && ls -la /app/vendor
 
 # Copy seluruh project

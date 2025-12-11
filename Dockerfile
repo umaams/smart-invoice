@@ -1,7 +1,7 @@
 # ---------------------------------------
 # Stage 1: Build dependencies (Composer)
 # ---------------------------------------
-FROM php:8.3-cli AS builder
+FROM php:7.4-cli AS builder
 
 # Install required packages
 RUN apt-get update && apt-get install -y \
@@ -15,7 +15,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 
 WORKDIR /app
 
-# Copy composer files (optional, jika CI3 pakai composer)
+# Copy composer files
 COPY composer.json composer.lock ./
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
@@ -27,7 +27,7 @@ COPY . .
 # ---------------------------------------
 # Stage 2: Production Image (PHP-FPM)
 # ---------------------------------------
-FROM php:8.3-fpm
+FROM php:7.4-fpm
 
 RUN apt-get update && apt-get install -y \
     git unzip libzip-dev libpng-dev libjpeg-dev libfreetype6-dev libxml2-dev \
@@ -42,7 +42,7 @@ WORKDIR /var/www/html
 # Copy app dari builder
 COPY --from=builder /app /var/www/html
 
-# CI3 membutuhkan permission pada writable directories
+# CI3 membutuhkan permission writable directories
 RUN chown -R www-data:www-data application/cache \
     && chown -R www-data:www-data application/logs \
     && chmod -R 775 application/cache application/logs

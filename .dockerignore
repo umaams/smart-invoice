@@ -1,5 +1,12 @@
+.git
 .gitignore
-CONTRIBUTING.md
+.DS_Store
 Dockerfile
-license.txt
-README.md
+docker-compose.yml
+node_modules
+storage
+vendor
+.env
+.env.*
+npm-debug.log
+yarn-error.log

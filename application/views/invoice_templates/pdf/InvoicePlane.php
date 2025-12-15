@@ -156,7 +156,7 @@
         <?php foreach ($invoice_tax_rates as $invoice_tax_rate) : ?>
             <tr>
                 <td <?php echo($show_item_discounts ? 'colspan="5"' : 'colspan="4"'); ?> class="text-right">
-                    
+                    <?php echo htmlsc($invoice_tax_rate->invoice_tax_rate_name) ?>
                 </td>
                 <td class="text-right">
                     <?php echo format_currency($invoice_tax_rate->invoice_tax_rate_amount); ?>

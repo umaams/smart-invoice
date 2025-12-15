@@ -3,7 +3,7 @@
 # ---------------------------------------
 FROM php:7.4-cli AS builder
 
-# Install system dependencies (INCLUDE curl)
+# Install required packages (tambahkan curl)
 RUN apt-get update && apt-get install -y \
     curl \
     git \
@@ -17,24 +17,25 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install gd zip exif \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
-RUN curl -fsSL https://getcomposer.org/installer | php \
-    --install-dir=/usr/local/bin \
-    --filename=composer
+# Install Composer (SAFE WAY)
+RUN curl -fsSL https://getcomposer.org/installer -o composer-setup.php \
+    && php composer-setup.php \
+        --install-dir=/usr/local/bin \
+        --filename=composer \
+    && rm composer-setup.php
 
 WORKDIR /app
 
-# Copy composer files first (cache friendly)
+# Copy composer files
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies
 RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
     --no-progress
 
-# Copy entire application
+# Copy seluruh project
 COPY . .
 
 # ---------------------------------------
@@ -42,7 +43,6 @@ COPY . .
 # ---------------------------------------
 FROM php:7.4-fpm
 
-# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -60,29 +60,25 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /var/www/html
 
-# Copy app from builder
+# Copy app dari builder
 COPY --from=builder /app /var/www/html
 
 # ---------------------------------------
-# Permissions (CI3 + mPDF)
+# FIX PERMISSION (CI3 + mPDF)
 # ---------------------------------------
+
 RUN mkdir -p \
         application/cache \
         application/logs \
-        uploads \
         vendor/mpdf/mpdf/tmp \
     && chown -R www-data:www-data \
         application/cache \
         application/logs \
-        uploads \
         vendor/mpdf/mpdf/tmp \
     && chmod -R 775 \
         application/cache \
         application/logs \
-        uploads \
         vendor/mpdf/mpdf/tmp
-
-USER www-data
 
 EXPOSE 9000
 

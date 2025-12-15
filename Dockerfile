@@ -3,7 +3,7 @@
 # ---------------------------------------
 FROM php:7.4-cli AS builder
 
-# Install required packages (tambahkan curl)
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     git \
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install gd zip exif \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Composer (SAFE WAY)
+# Install Composer (SAFE)
 RUN curl -fsSL https://getcomposer.org/installer -o composer-setup.php \
     && php composer-setup.php \
         --install-dir=/usr/local/bin \
@@ -26,23 +26,22 @@ RUN curl -fsSL https://getcomposer.org/installer -o composer-setup.php \
 
 WORKDIR /app
 
-# Copy composer files
-COPY composer.json composer.lock ./
+# Copy entire application first
+COPY . .
 
+# Install PHP dependencies
 RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction \
     --no-progress
 
-# Copy seluruh project
-COPY . .
-
 # ---------------------------------------
 # Stage 2: Production Image (PHP-FPM)
 # ---------------------------------------
 FROM php:7.4-fpm
 
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -60,13 +59,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /var/www/html
 
-# Copy app dari builder
+# Copy application from builder
 COPY --from=builder /app /var/www/html
 
 # ---------------------------------------
-# FIX PERMISSION (CI3 + mPDF)
+# Permissions (CI3 + mPDF)
 # ---------------------------------------
-
 RUN mkdir -p \
         application/cache \
         application/logs \
@@ -79,6 +77,9 @@ RUN mkdir -p \
         application/cache \
         application/logs \
         vendor/mpdf/mpdf/tmp
+
+# Run as non-root (BEST PRACTICE)
+USER www-data
 
 EXPOSE 9000
 

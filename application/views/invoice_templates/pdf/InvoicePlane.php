@@ -81,7 +81,7 @@
         <tr>
             <td width="12%" style="vertical-align: middle; padding: 3px; border: none; font-size:12px;"><b>PIC Name</b></td>
             <td width="2%" style="vertical-align: middle; padding: 3px; border: none; font-size:12px;"><b>:</b></td>
-            <td width="86%" style="vertical-align: middle; padding: 3px; border: none; font-size:12px;"><b><?=$invoice->client_pic_name?></b></td>
+            <td width="86%" style="vertical-align: middle; padding: 3px; border: none; font-size:12px;"><b><?=$custom_fields['client']['PIC Name']?></b></td>
         </tr>
         <tr>
             <td width="12%" style="vertical-align: middle; padding: 3px; border: none; font-size:12px;"><b>Address</b></td>

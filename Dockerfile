@@ -3,11 +3,8 @@
 # ---------------------------------------
 FROM php:7.4-cli AS builder
 
-# Install build dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    unzip \
+    curl git unzip \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
@@ -17,7 +14,6 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install gd zip exif \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Composer (SAFE)
 RUN curl -fsSL https://getcomposer.org/installer -o composer-setup.php \
     && php composer-setup.php \
         --install-dir=/usr/local/bin \
@@ -25,26 +21,17 @@ RUN curl -fsSL https://getcomposer.org/installer -o composer-setup.php \
     && rm composer-setup.php
 
 WORKDIR /app
-
-# Copy entire application first
 COPY . .
-
-# Install PHP dependencies
-RUN composer install \
-    --no-dev \
-    --optimize-autoloader \
-    --no-interaction \
-    --no-progress
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # ---------------------------------------
-# Stage 2: Production Image (PHP-FPM)
+# Stage 2: Production (Nginx + PHP-FPM)
 # ---------------------------------------
 FROM php:7.4-fpm
 
-# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
+    nginx \
+    git unzip \
     libzip-dev \
     libpng-dev \
     libjpeg-dev \
@@ -52,35 +39,25 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
     && docker-php-ext-install pdo_mysql mysqli zip gd exif opcache \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
-    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
-
-# Copy application from builder
 COPY --from=builder /app /var/www/html
 
-# ---------------------------------------
-# Permissions (CI3 + mPDF)
-# ---------------------------------------
+# Remove default nginx config
+RUN rm /etc/nginx/sites-enabled/default
+
+# Copy custom nginx config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Permissions
 RUN mkdir -p \
         application/cache \
         application/logs \
+        uploads \
         vendor/mpdf/mpdf/tmp \
-    && chown -R www-data:www-data \
-        application/cache \
-        application/logs \
-        vendor/mpdf/mpdf/tmp \
-    && chmod -R 775 \
-        application/cache \
-        application/logs \
-        vendor/mpdf/mpdf/tmp
+    && chown -R www-data:www-data /var/www/html
 
-# Run as non-root (BEST PRACTICE)
-USER www-data
+EXPOSE 80
 
-EXPOSE 9000
-
-CMD ["php-fpm"]
+CMD service nginx start && php-fpm
